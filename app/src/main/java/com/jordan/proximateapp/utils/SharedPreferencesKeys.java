@@ -8,4 +8,5 @@ public class SharedPreferencesKeys {
     public static String TOKEN = "TOKEN";
     public static String IS_LOGGED = "IS_LOGGED";
     public static String ID = "ID";
+    public static String PHOTO_PATH = "PHOTO_PATH";
 }

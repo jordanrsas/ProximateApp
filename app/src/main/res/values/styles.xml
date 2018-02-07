@@ -25,6 +25,15 @@
         <item name="android:gravity">center</item>
     </style>
 
+
+    <style name="AppTheme.NavigationView" parent="ThemeOverlay.AppCompat.Light">
+        <!-- This is the menu item text color. -->
+        <item name="android:textColorPrimary">@color/colorPrimary</item>
+        <!-- This is the menu header text color. -->
+        <!-- This is the selected color. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+    </style>
+
     <style name="dialogFullScreen">
         <item name="android:windowFrame">@null</item>
         <item name="android:windowBackground">@android:color/transparent</item>

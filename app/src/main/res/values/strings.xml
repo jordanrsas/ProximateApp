@@ -5,4 +5,8 @@
     <string name="title_cancelar">Cancelar</string>
     <string name="message_salir">¿Desea salir de la App?</string>
     <string name="error_empty">Nombre de usuario o contraseña no pueden estár vacíos</string>
+
+    <string name="drawer_open">Abrir</string>
+    <string name="drawer_close">Cerrar</string>
+    <string name="desea_cacelar">¿Deseas Salir y Cancelar la Operación Actual?</string>
 </resources>
