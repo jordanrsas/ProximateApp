@@ -4,4 +4,5 @@
     <string name="title_aceptar">Aceptar</string>
     <string name="title_cancelar">Cancelar</string>
     <string name="message_salir">¿Desea salir de la App?</string>
+    <string name="error_empty">Nombre de usuario o contraseña no pueden estár vacíos</string>
 </resources>

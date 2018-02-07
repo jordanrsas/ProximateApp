@@ -1,6 +1,5 @@
 package com.jordan.proximateapp.login;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,18 +15,21 @@ import com.amazonaws.mobileconnectors.lambdainvoker.LambdaFunctionException;
 import com.amazonaws.mobileconnectors.lambdainvoker.LambdaInvokerFactory;
 import com.amazonaws.regions.Regions;
 import com.jordan.proximateapp.R;
-import com.jordan.proximateapp.main.controllers.MainActivity;
 import com.jordan.proximateapp.main.data.ws.RequestLoginClass;
 import com.jordan.proximateapp.main.data.ws.ResponseLoginClass;
 import com.jordan.proximateapp.main.interfaces.LoginInterface;
+import com.jordan.proximateapp.net.APIClient;
+import com.jordan.proximateapp.net.IApiClient;
+import com.jordan.proximateapp.net.data.RequestLogin;
+import com.jordan.proximateapp.net.data.ResponseLogin;
 import com.jordan.proximateapp.utils.ProgressLayout;
 import com.jordan.proximateapp.utils.UI;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by jordan on 05/02/2018.
@@ -59,25 +61,37 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         final String user = txtEmail.getText().toString().trim();
         final String password = txtPassword.getText().toString().trim();
 
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                if (!TextUtils.isEmpty(user) && !TextUtils.isEmpty(password)) {
-                    //loginLamda(user, password);
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        if (!TextUtils.isEmpty(user) && !TextUtils.isEmpty(password)) {
+            //loginLamda(user, password);
+                    /*Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     startActivity(intent);
                     ProgressLayout.hide();
-                    LoginActivity.this.finish();
-                } else {
-                    ProgressLayout.hide();
-                    UI.createSimpleCustomDialog("Nombre de usuario o contraseña no pueden estár vacíos",
-                            getSupportFragmentManager());
-                }
-            }
-        };
+                    LoginActivity.this.finish();*/
+            //ProgressLayout.hide();
+            login(new RequestLogin(user, password));
+        } else {
+            ProgressLayout.hide();
+            UI.createSimpleCustomDialog(getString(R.string.error_empty),
+                    getSupportFragmentManager());
+        }
+    }
 
-        Timer timer = new Timer();
-        timer.schedule(timerTask, 2000);
+    private void login(RequestLogin requestLogin) {
+        APIClient.getClient().create(IApiClient.class).login(requestLogin).enqueue(new Callback<ResponseLogin>() {
+            @Override
+            public void onResponse(Call<ResponseLogin> call, Response<ResponseLogin> response) {
+                response.body();
+                ProgressLayout.hide();
+                UI.createSimpleCustomDialog(response.body().getMessage(), getSupportFragmentManager());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseLogin> call, Throwable t) {
+                Log.e("Error", t.getMessage());
+                ProgressLayout.hide();
+                UI.createSimpleCustomDialog(t.getMessage(), getSupportFragmentManager());
+            }
+        });
     }
 
     protected void loginLamda(String user, String password) {
