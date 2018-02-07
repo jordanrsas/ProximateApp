@@ -1,7 +1,6 @@
 package com.jordan.proximateapp.main.controllers;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -123,36 +122,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
-
-        //getDataUserSession();
-
-
-    }
-
-    private void getDataUserSession() {
-        APIClient.getClient().create(IApiClient.class).getDataUser(SharedPrefsManager.getInstance().getString(TOKEN)).enqueue(new Callback<ResponseGetDataUser>() {
-            @Override
-            public void onResponse(Call<ResponseGetDataUser> call, Response<ResponseGetDataUser> response) {
-                //Log.e("MyError", response.body().getMessage());
-                ResponseGetDataUser responseGetDataUser = response.body();
-                if (responseGetDataUser.getSuccess()) {
-
-                } else {
-                    goToLogin();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseGetDataUser> call, Throwable t) {
-                Log.e("MyError", t.getMessage());
-            }
-        });
-    }
-
-    private void goToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
-        this.finish();
     }
 
     private void dispatchTakePictureIntent() {
@@ -165,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 photoFile = createImageFile();
             } catch (IOException ex) {
                 // Error occurred while creating the File
-
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {

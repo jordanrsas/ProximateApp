@@ -9,4 +9,12 @@ import java.util.ArrayList;
 public class ResponseGetDataUser extends ResponseWS {
 
     ArrayList<DataUser> data;
+
+    public ArrayList<DataUser> getData() {
+        return data;
+    }
+
+    public void setData(ArrayList<DataUser> data) {
+        this.data = data;
+    }
 }
