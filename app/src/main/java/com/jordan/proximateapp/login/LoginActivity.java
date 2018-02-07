@@ -1,5 +1,6 @@
 package com.jordan.proximateapp.login;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -15,6 +16,7 @@ import com.amazonaws.mobileconnectors.lambdainvoker.LambdaFunctionException;
 import com.amazonaws.mobileconnectors.lambdainvoker.LambdaInvokerFactory;
 import com.amazonaws.regions.Regions;
 import com.jordan.proximateapp.R;
+import com.jordan.proximateapp.main.controllers.MainActivity;
 import com.jordan.proximateapp.main.data.ws.RequestLoginClass;
 import com.jordan.proximateapp.main.data.ws.ResponseLoginClass;
 import com.jordan.proximateapp.main.interfaces.LoginInterface;
@@ -23,6 +25,7 @@ import com.jordan.proximateapp.net.IApiClient;
 import com.jordan.proximateapp.net.data.RequestLogin;
 import com.jordan.proximateapp.net.data.ResponseLogin;
 import com.jordan.proximateapp.utils.ProgressLayout;
+import com.jordan.proximateapp.utils.SharedPrefsManager;
 import com.jordan.proximateapp.utils.UI;
 
 import butterknife.BindView;
@@ -30,6 +33,10 @@ import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.ID;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.IS_LOGGED;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.TOKEN;
 
 /**
  * Created by jordan on 05/02/2018.
@@ -62,12 +69,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         final String password = txtPassword.getText().toString().trim();
 
         if (!TextUtils.isEmpty(user) && !TextUtils.isEmpty(password)) {
-            //loginLamda(user, password);
-                    /*Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    ProgressLayout.hide();
-                    LoginActivity.this.finish();*/
-            //ProgressLayout.hide();
             login(new RequestLogin(user, password));
         } else {
             ProgressLayout.hide();
@@ -80,9 +81,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         APIClient.getClient().create(IApiClient.class).login(requestLogin).enqueue(new Callback<ResponseLogin>() {
             @Override
             public void onResponse(Call<ResponseLogin> call, Response<ResponseLogin> response) {
-                response.body();
+                ResponseLogin responseLogin = response.body();
                 ProgressLayout.hide();
-                UI.createSimpleCustomDialog(response.body().getMessage(), getSupportFragmentManager());
+                if (responseLogin.getSuccess()) {
+                    saveSession(responseLogin);
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    ProgressLayout.hide();
+                    LoginActivity.this.finish();
+                } else {
+                    UI.createSimpleCustomDialog(responseLogin.getMessage(), getSupportFragmentManager());
+                }
+
             }
 
             @Override
@@ -92,6 +103,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 UI.createSimpleCustomDialog(t.getMessage(), getSupportFragmentManager());
             }
         });
+    }
+
+    private void saveSession(ResponseLogin responseLogin) {
+        SharedPrefsManager.initialize(this);
+        SharedPrefsManager.getInstance().setBoolean(IS_LOGGED, true);
+        SharedPrefsManager.getInstance().setString(TOKEN, responseLogin.getToken());
+        SharedPrefsManager.getInstance().setInt(ID, responseLogin.getId());
     }
 
     protected void loginLamda(String user, String password) {

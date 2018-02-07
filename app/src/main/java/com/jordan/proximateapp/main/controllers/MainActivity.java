@@ -10,10 +10,15 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import com.jordan.proximateapp.R;
+import com.jordan.proximateapp.net.APIClient;
+import com.jordan.proximateapp.net.IApiClient;
+import com.jordan.proximateapp.net.data.ResponseGetDataUser;
+import com.jordan.proximateapp.utils.SharedPrefsManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +28,11 @@ import java.util.Date;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.TOKEN;
 
 /**
  * Created by jordan on 06/02/2018.
@@ -39,15 +49,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
 
-    static final int REQUEST_TAKE_PHOTO = 1;
+    //static final int REQUEST_TAKE_PHOTO = 1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
+        getDataUserSession();
         btnImagen.setOnClickListener(this);
+
+    }
+
+    private void getDataUserSession() {
+        APIClient.getClient().create(IApiClient.class).getDataUser(SharedPrefsManager.getInstance().getString(TOKEN)).enqueue(new Callback<ResponseGetDataUser>() {
+            @Override
+            public void onResponse(Call<ResponseGetDataUser> call, Response<ResponseGetDataUser> response) {
+                Log.e("MyError", response.body().getMessage());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseGetDataUser> call, Throwable t) {
+                Log.e("MyError", t.getMessage());
+            }
+        });
     }
 
     private void dispatchTakePictureIntent() {
@@ -68,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         "com.example.android.fileprovider",
                         photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
     }
