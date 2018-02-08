@@ -1,9 +1,13 @@
 package com.jordan.proximateapp.main.controllers;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,19 +24,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.jordan.proximateapp.R;
 import com.jordan.proximateapp.interfaces.DialogDoubleActions;
 import com.jordan.proximateapp.login.LoginActivity;
+import com.jordan.proximateapp.main.fragments.PhotoLocationFragment;
 import com.jordan.proximateapp.main.fragments.UserFragment;
 import com.jordan.proximateapp.main.interfaces.enums.Direction;
-import com.jordan.proximateapp.net.APIClient;
-import com.jordan.proximateapp.net.IApiClient;
-import com.jordan.proximateapp.net.data.ResponseGetDataUser;
-import com.jordan.proximateapp.utils.SharedPreferencesKeys;
 import com.jordan.proximateapp.utils.SharedPrefsManager;
 import com.jordan.proximateapp.utils.SupportComponent;
 import com.jordan.proximateapp.utils.UI;
@@ -46,17 +47,16 @@ import java.util.Date;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.hdodenhof.circleimageview.CircleImageView;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
-import static com.jordan.proximateapp.utils.SharedPreferencesKeys.TOKEN;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.LATITUDE;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.LONGITUDE;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.PHOTO_PATH;
 
 /**
  * Created by jordan on 06/02/2018.
  */
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, NavigationView.OnNavigationItemSelectedListener, LocationListener {
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -77,7 +77,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //static final int REQUEST_TAKE_PHOTO = 1;
     private SupportComponent mSupportComponent;
     private int lastCheked;
-    private Bitmap imageBitmap;
+    private LocationManager locationManager;
+
+    private double latitude;
+    private double longitude;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View header = navigationView.getHeaderView(0);
         imageUser = header.findViewById(R.id.imageProfile);
 
-        String path = SharedPrefsManager.getInstance().getString(SharedPreferencesKeys.PHOTO_PATH);
+        String path = SharedPrefsManager.getInstance().getString(PHOTO_PATH);
         if (!TextUtils.isEmpty(path)) {
             printUserImage(path);
         }
@@ -148,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        getLocation();
         dispatchTakePictureIntent();
     }
 
@@ -171,16 +175,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             //Bundle extras = data.getExtras();
-            SharedPrefsManager.getInstance().setString(SharedPreferencesKeys.PHOTO_PATH, mCurrentPhotoPath);
+            SharedPrefsManager.getInstance().setString(PHOTO_PATH, mCurrentPhotoPath);
+            SharedPrefsManager.getInstance().setString(LATITUDE, Double.toString(latitude));
+            SharedPrefsManager.getInstance().setString(LONGITUDE, Double.toString(longitude));
             printUserImage(mCurrentPhotoPath);
         }
     }
 
     private void printUserImage(String path) {
-        if (imageBitmap == null) {
-            setPic(path);
-        }
-        imageUser.setImageBitmap(imageBitmap);
+        setPic(path);
     }
 
     private void setPic(String path) {
@@ -203,7 +206,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bmOptions.inSampleSize = scaleFactor;
         bmOptions.inPurgeable = true;
 
-        imageBitmap = BitmapFactory.decodeFile(path, bmOptions);
+        Bitmap imageBitmap = BitmapFactory.decodeFile(path, bmOptions);
+        imageUser.setImageBitmap(imageBitmap);
         //mImageView.setImageBitmap(bitmap);
     }
 
@@ -254,17 +258,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     lastCheked = id;
                     break;
                 case R.id.menu_foto:
-
+                    loadFragment(PhotoLocationFragment.newInstance(), Direction.FORDWARD, false);
+                    lastCheked = id;
                     break;
                 case R.id.menu_logout:
+                    UI.createSimpleCustomDialog("¿Desea cerrar sesión?", getSupportFragmentManager(),
+                            new DialogDoubleActions() {
+                                @Override
+                                public void actionConfirm(Object... params) {
+                                    logOut();
+                                }
+
+                                @Override
+                                public void actionCancel(Object... params) {
+                                    navigationView.setCheckedItem(lastCheked);
+                                }
+                            }, true, true);
                     break;
             }
         }
         return true;
     }
 
+    private void logOut() {
+        SharedPrefsManager.getInstance().clearPrefs();
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        this.finish();
+    }
+
     protected void loadFragment(@NonNull GenericFragment fragment, @NonNull Direction Direction,
                                 boolean addToBackStack) {
         mSupportComponent.loadFragment(fragment, R.id.container, Direction, addToBackStack);
+    }
+
+    private void getLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 5, this);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Toast.makeText(MainActivity.this, "Please Enable GPS and Internet", Toast.LENGTH_SHORT).show();
     }
 }

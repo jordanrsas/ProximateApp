@@ -10,4 +10,6 @@
     <string name="drawer_close">Cerrar</string>
     <string name="desea_cacelar">¿Deseas Salir y Cancelar la Operación Actual?</string>
     <string name="data_user_txt">Datos de usuario</string>
+
+    <string name="google_maps_key">AIzaSyB_Fg2AjwowinAIYHTpwb06wWfsJSIPf24</string>
 </resources>
