@@ -85,7 +85,6 @@ public class SharedPrefsManager {
         editor.apply();
     }
 
-
     public boolean getBoolean(String key, boolean defValue) {
         return getPrefs().getBoolean(key, defValue);
     }

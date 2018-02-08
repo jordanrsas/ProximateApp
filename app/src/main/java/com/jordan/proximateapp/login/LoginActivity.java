@@ -1,7 +1,6 @@
 package com.jordan.proximateapp.login;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -11,15 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
-import com.amazonaws.mobileconnectors.lambdainvoker.LambdaFunctionException;
-import com.amazonaws.mobileconnectors.lambdainvoker.LambdaInvokerFactory;
-import com.amazonaws.regions.Regions;
 import com.jordan.proximateapp.R;
 import com.jordan.proximateapp.main.controllers.MainActivity;
-import com.jordan.proximateapp.main.data.ws.RequestLoginClass;
-import com.jordan.proximateapp.main.data.ws.ResponseLoginClass;
-import com.jordan.proximateapp.main.interfaces.LoginInterface;
 import com.jordan.proximateapp.net.APIClient;
 import com.jordan.proximateapp.net.IApiClient;
 import com.jordan.proximateapp.net.data.RequestLogin;
@@ -36,6 +28,7 @@ import retrofit2.Response;
 
 import static com.jordan.proximateapp.utils.SharedPreferencesKeys.ID;
 import static com.jordan.proximateapp.utils.SharedPreferencesKeys.IS_LOGGED;
+import static com.jordan.proximateapp.utils.SharedPreferencesKeys.LAST_LOGIN;
 import static com.jordan.proximateapp.utils.SharedPreferencesKeys.TOKEN;
 
 /**
@@ -110,37 +103,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         SharedPrefsManager.getInstance().setBoolean(IS_LOGGED, true);
         SharedPrefsManager.getInstance().setString(TOKEN, responseLogin.getToken());
         SharedPrefsManager.getInstance().setInt(ID, responseLogin.getId());
-    }
-
-    protected void loginLamda(String user, String password) {
-        CognitoCachingCredentialsProvider cognitoProvider = new CognitoCachingCredentialsProvider(
-                this.getApplicationContext(), "identity-pool-id", Regions.US_EAST_1);
-
-        LambdaInvokerFactory factory = new LambdaInvokerFactory(this.getApplicationContext(),
-                Regions.US_WEST_2, cognitoProvider);
-
-        final LoginInterface myInterface = factory.build(LoginInterface.class);
-        RequestLoginClass request = new RequestLoginClass(user, password);
-
-        new AsyncTask<RequestLoginClass, Void, ResponseLoginClass>() {
-            @Override
-            protected ResponseLoginClass doInBackground(RequestLoginClass... params) {
-                try {
-                    return myInterface.login(params[0]);
-                } catch (LambdaFunctionException lfe) {
-                    Log.e("Tag", "Failed to invoke echo", lfe);
-                    return null;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(ResponseLoginClass responseLoginClass) {
-                if (responseLoginClass == null) {
-                    return;
-                }
-
-                //GET PARAMS RETURN
-            }
-        }.execute(request);
+        Long tsLong = System.currentTimeMillis() / 1000;
+        SharedPrefsManager.getInstance().setString(LAST_LOGIN, tsLong.toString());
     }
 }

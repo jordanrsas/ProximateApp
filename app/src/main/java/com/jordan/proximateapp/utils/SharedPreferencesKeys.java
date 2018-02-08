@@ -11,5 +11,6 @@ public class SharedPreferencesKeys {
     public static String PHOTO_PATH = "PHOTO_PATH";
     public static String LATITUDE = "LATITUDE";
     public static String LONGITUDE = "LONGITUDE";
-
+    public static String LAST_LOGIN = "LAST_LOGIN";
+    public static String DATA_USER_SAVED = "DATA_USER_SAVED";
 }
